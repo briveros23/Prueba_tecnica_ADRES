@@ -39,20 +39,34 @@ prestadores <- read.xlsx("Prestadores.xlsx")
 dbWriteTable(conect, name = 'prestadores', value = prestadores, row.names = FALSE, overwrite = TRUE)
 dbWriteTable(conect, name = 'municipios', value = municipios, row.names = FALSE, overwrite = TRUE)
 
-resultados <- dbGetQuery(con,"select depa_nombre , muni_nombre, nits_nit, clpr_codigo, clpr_nombre, ese, nivel, caracter, habilitado, fecha_radicacion, fecha_vencimiento, clase_persona, dv, naju_codigo, naju_nombre
+resultados <- dbGetQuery(conect,"select depa_nombre , muni_nombre, nits_nit, clpr_codigo, clpr_nombre, ese, nivel, caracter, habilitado, fecha_radicacion, fecha_vencimiento, clase_persona, dv, naju_codigo, naju_nombre
                      from prestadores
                      ")
 ### descripcion de los prestadores
 
-resultados <- dbGetQuery(con,"SELECT clase_persona, COUNT(*) AS cantidad FROM prestadores GROUP BY clase_persona;")
+resultados1 <- dbGetQuery(conect,"SELECT clase_persona, 
+                         COUNT(*) AS cantidad 
+                         FROM prestadores 
+                         GROUP BY clase_persona;")
 
 # numero y porcentaje del tipo de persona la cual presto su servicio
-resultados <- dbGetQuery(con,"SELECT  clase_persona,
+resultados2 <- dbGetQuery(conect,"SELECT  clase_persona,
                         COUNT(*) AS clase_persona,
                         COUNT(*) * 100.0 / (SELECT COUNT(*) FROM prestadores) AS porcentaje
                         FROM prestadores
                         GROUP BY clase_persona;")
 
 # numero de contratos asociados 
+dbExecute(conect, 'ALTER TABLE prestadores ADD COLUMN ano_radi INTEGER')
+dbExecute(conect, 'ALTER TABLE prestadores ADD COLUMN mes_radi INTEGER')
+dbExecute(conect, 'ALTER TABLE prestadores ADD COLUMN dia_radi INTEGER')
 
+
+dbExecute(conect,"UPDATE prestadores
+    SET 
+    ano_radi = CAST(SUBSTR(fecha_radicacion, 1, 4) AS INTEGER),
+    mes_radi = CAST(SUBSTR(fecha_radicacion, 5, 2) AS INTEGER),
+    dia_radi = CAST(SUBSTR(fecha_radicacion, 7, 2) AS INTEGER);")
+
+dbGetQuery(conect,"SELECT  * FROM prestadores;")
 
