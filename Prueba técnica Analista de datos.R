@@ -1,9 +1,3 @@
-# direccion de trabajo 
-setwd('C:/Users/bcriv/OneDrive/Escritorio/Prueba_tecnica')
-# carga de datos 
-library(openxlsx)
-library(readxl)
-library(sqldf)
 ## lectura
 municipios <- read.xlsx("Municipios.xlsx")
 prestadores <- read.xlsx("Prestadores.xlsx")
@@ -69,4 +63,16 @@ dbExecute(conect,"UPDATE prestadores
     dia_radi = CAST(SUBSTR(fecha_radicacion, 7, 2) AS INTEGER);")
 
 dbGetQuery(conect,"SELECT  * FROM prestadores;")
+#### grafico de tendencias 
+#### tendencia por departamento
+resultados <- dbGetQuery(conect, "SELECT depa_nombre, ano_radi, mes_radi, COUNT(*) as conteo 
+                         FROM prestadores 
+                         GROUP BY depa_nombre, ano_radi, mes_radi")
+resultados 
+ggplot(resultados, aes(x = as.Date(paste(ano_radi, mes_radi, "01", sep = "-")), y = conteo, color = depa_nombre)) +
+  geom_line() +
+  labs(x = "Fecha", y = "Cantidad de Datos", title = "Avance en el Tiempo por Departamento") +
+  theme_minimal()
 
+
+dbDisconnect(conect)
