@@ -121,13 +121,13 @@ tipo_org <- dbGetQuery(conect,"SELECT  clpr_nombre,
 tipo_org
 
 # dependencia de entidades privadas 
-tipo_privaridad <- dbGetQuery(conect,"SELECT  naju_nombre,
+tipo_privacidad <- dbGetQuery(conect,"SELECT  naju_nombre,
                         COUNT(*) AS cantidad,
                         COUNT(*) * 100.0 / (SELECT COUNT(*) FROM prestadores) AS porcentaje
                         FROM prestadores
                         GROUP BY naju_nombre;")
-
-ggplot(tipo_privaridad, aes(x = "", y = porcentaje, fill = naju_nombre)) +
+# cantidad de tipos de estableciomientos 
+ggplot(tipo_privacidad, aes(x = "", y = porcentaje, fill = naju_nombre)) +
   geom_bar(stat = "identity") +
   coord_polar("y", start = 0) +
   labs(title = "Distribución de Tipos de Establecimientos de Salud") +
@@ -136,12 +136,13 @@ ggplot(tipo_privaridad, aes(x = "", y = porcentaje, fill = naju_nombre)) +
   theme(legend.position = "right") 
 
 # departamentos que mas solicitaron prestadores 
+# departamentos mas importantes
 departamentos_imp <- dbGetQuery(conect,"SELECT depa_nombre, COUNT(*) AS cantidad
            FROM prestadores
            GROUP BY depa_nombre
            ORDER BY cantidad DESC
            LIMIT 5;")
-
+# todos los departamentos para analsiis espacial
 conti_departamento <- dbGetQuery(conect,"SELECT depa_nombre, COUNT(*) AS cantidad
            FROM prestadores
            GROUP BY depa_nombre
@@ -157,9 +158,14 @@ comp_poblacion <- dbGetQuery(conect,"SELECT p.depa_nombre, COUNT(*) AS cantidad,
           ) m ON m.Departamento = p.depa_nombre
           GROUP BY p.depa_nombre
           ORDER BY cantidad DESC;")
+
+# complementacion grafica de distribucion 
 comp_poblacion$porcentaje_de_la_poblacion <- comp_poblacion$cantidad/comp_poblacion$poblacion_total
+
 hist(comp_poblacion$porcentaje_de_la_poblacion,xlab = 'Porcentaje de poblacion', ylab = 'Frecuencia',main = 'distribucion del porcentaje de prestadores por departamento')
 mean(comp_poblacion$porcentaje_de_la_poblacion)
+
+
 dbGetQuery(conect,"SELECT p.depa_nombre, COUNT(*) AS cantidad, m.poblacion AS poblacion_total 
           FROM prestadores p
           JOIN (
@@ -212,9 +218,9 @@ ggplot(datos_por_region, aes(x = as.Date(paste(ano_radi, mes_radi, "01", sep = "
   labs(x = "Fecha", y = "Cantidad de Datos", title = "Avance en el Tiempo por Departamento") +
   theme_minimal()
 
-## mapas asociados 
+## mapas de conteos
 library(dplyr)
-
+### 
 conti_departamento <- conti_departamento %>%
   mutate(depa_nombre = case_when(
     depa_nombre == "amazonas" ~ "AMAZONAS",
